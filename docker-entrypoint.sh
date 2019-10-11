@@ -8,7 +8,7 @@ source $JBOSS_HOME/bin/launch/configure.sh
 
 set -e
 
-/opt/eap/bin/jboss-cli.sh --file=/extensions/scripts/actions.cli
-/opt/eap/bin/openshift-launch.sh;
+$JBOSS_HOME/bin/jboss-cli.sh --file=/extensions/scripts/actions.cli
+$JBOSS_HOME/bin/openshift-launch.sh;
 
 exec "$@"

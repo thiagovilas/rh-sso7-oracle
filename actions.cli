@@ -8,8 +8,27 @@ batch
 ## /subsystem=deployment-scanner/path=deployments:write-attribute(name="auto-deploy-exploded",value=false)
 
 ## Add Oracle driver
-module add --name=com.oracle --resources=/extensions/ojdbc7.jar --dependencies=javax.api,javax.resource.api
-/subsystem=datasources/jdbc-driver=oracle:add(driver-name=oracle,driver-module-name=com.oracle,driver-xa-datasource-class-name=oracle.jdbc.xa.client.OracleXADataSource)
+echo Cheking Diver
+echo "/subsystem=datasources/:read-resource"
+/subsystem=datasources/:read-resource
+/subsystem=datasources/data-source=KeycloakDS:read-resource
+
+##if (outcome != success) of /subsystem=datasources/jdbc-driver=oracle/:read-resource
+##    module add --name=com.oracle --resources=/extensions/ojdbc7.jar --dependencies=javax.api,javax.resource.api
+##    /subsystem=datasources/jdbc-driver=oracle:add(driver-name=oracle,driver-module-name=com.oracle,driver-xa-datasource-class-name=oracle.jdbc.xa.client.OracleXADataSource)
+
+##else 
+    echo module com.oracle already installed
+##end-if
+
+##if (outcome != success) of /subsystem=datasources/jdbc-driver=oracle/:read-resource
+##    echo install com.oracle ...   
+    
+##else 
+##    echo module com.oracle already installed
+##end-if
+
+
 /subsystem=datasources/data-source=KeycloakDS:remove()
 /subsystem=datasources/data-source=KeycloakDS:add(min-pool-size=2,max-pool-size=20,jndi-name=java:jboss/datasources/KeycloakDS,enabled=true,use-java-context=true,connection-url="jdbc\:oracle\:thin\:@(DESCRIPTION\=(LOAD_BALANCE\=on)(ADDRESS\=(PROTOCOL\=TCP)(HOST\=${env.ORACLE_SERVICE_HOST})(PORT\=${env.ORACLE_SERVICE_PORT}))(ADDRESS\=(PROTOCOL\=TCP)(HOST\=${env.ORACLE_SERVICE_HOST_2})(PORT\=${env.ORACLE_SERVICE_PORT_2}))(CONNECT_DATA\=(SERVICE_NAME\=${env.ORACLE_SERVICE_NAME})))",driver-name=oracle,user-name=${env.ORACLE_USERNAME},password=${env.ORACLE_PASSWORD},validate-on-match=false,background-validation=true,background-validation-millis=60000,idle-timeout-minutes=5,valid-connection-checker-class-name=org.jboss.jca.adapters.jdbc.extensions.oracle.OracleValidConnectionChecker,exception-sorter-class-name=org.jboss.jca.adapters.jdbc.extensions.oracle.OracleExceptionSorter,stale-connection-checker-class-name=org.jboss.jca.adapters.jdbc.extensions.oracle.OracleStaleConnectionChecker)
 

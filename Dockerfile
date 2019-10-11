@@ -1,9 +1,6 @@
-FROM registry.access.redhat.com/redhat-sso-7/sso72-openshift
+FROM registry.access.redhat.com/redhat-sso-7/sso73-openshift
 
 USER root
-
-#COPY docker-entrypoint.sh /docker-entrypoint.sh
-#COPY /extensions /extensions 
 
 ## Add Oracle JAR to /extensions directory
 ARG FILE_NAME=ojdbc7.jar
