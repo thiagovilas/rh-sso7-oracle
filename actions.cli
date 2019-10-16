@@ -2,42 +2,49 @@
 
 ## admin cli commands to edit the configuration
 embed-server --std-out=echo  --server-config=standalone-openshift.xml
-batch
-
-
-## /subsystem=deployment-scanner/path=deployments:write-attribute(name="auto-deploy-exploded",value=false)
+##batch
 
 ## Add Oracle driver
-echo Cheking Diver
-echo "/subsystem=datasources/:read-resource"
-/subsystem=datasources/:read-resource
-/subsystem=datasources/data-source=KeycloakDS:read-resource
+echo "Checking Diver"
 
-##if (outcome != success) of /subsystem=datasources/jdbc-driver=oracle/:read-resource
-##    module add --name=com.oracle --resources=/extensions/ojdbc7.jar --dependencies=javax.api,javax.resource.api
-##    /subsystem=datasources/jdbc-driver=oracle:add(driver-name=oracle,driver-module-name=com.oracle,driver-xa-datasource-class-name=oracle.jdbc.xa.client.OracleXADataSource)
+if (outcome != success) of /subsystem=datasources/jdbc-driver=oracle:read-resource
+    echo "installing com.oracle ..."
+    module add --name=com.oracle --resources=/extensions/ojdbc7.jar --dependencies=javax.api,javax.resource.api
+    /subsystem=datasources/jdbc-driver=oracle:add(driver-name=oracle,driver-module-name=com.oracle,driver-xa-datasource-class-name=oracle.jdbc.xa.client.OracleXADataSource)
+    echo "installed com.oracle ..."
+else
+    echo "module com.oracle already installed"
+end-if
 
-##else 
-    echo module com.oracle already installed
-##end-if
+if (outcome == success) of /subsystem=datasources/data-source=KeycloakDS:read-resource
+    echo "Removing KeycloakDS if exists"
+    /subsystem=datasources/data-source=KeycloakDS:remove()
+end-if
 
-##if (outcome != success) of /subsystem=datasources/jdbc-driver=oracle/:read-resource
-##    echo install com.oracle ...   
-    
-##else 
-##    echo module com.oracle already installed
-##end-if
+## Replace this connection-url Line if you have an oracle cluster
+## connection-url="jdbc\:oracle\:thin\:@(DESCRIPTION\=(LOAD_BALANCE\=on)(ADDRESS\=(PROTOCOL\=TCP)(HOST\=${env.ORACLE_SERVICE_HOST})(PORT\=${env.ORACLE_SERVICE_PORT}))(ADDRESS\=(PROTOCOL\=TCP)(HOST\=${env.ORACLE_SERVICE_HOST_2})(PORT\=${env.ORACLE_SERVICE_PORT_2}))(CONNECT_DATA\=(SERVICE_NAME\=${env.ORACLE_SERVICE_NAME})))"
+
+## Replace this connection-url Line if you have an oracle single instance
+## connection-url="jdbc:oracle:thin:@//${env.ORACLE_SERVICE_HOST}:${env.ORACLE_SERVICE_PORT}/${env.ORACLE_SERVICE_NAME}"
+
+/subsystem=datasources/data-source=KeycloakDS:add(min-pool-size=2,  \
+                                                  max-pool-size=20,  \
+                                                  jndi-name=java:jboss/datasources/KeycloakDS,  \
+                                                  enabled=true,use-java-context=true,  \
+                                                  connection-url="jdbc:oracle:thin:@//${env.ORACLE_SERVICE_HOST}:${env.ORACLE_SERVICE_PORT}/${env.ORACLE_SERVICE_NAME}",  \
+                                                  driver-name=oracle,  \
+                                                  user-name=${env.ORACLE_USERNAME},  \
+                                                  password=${env.ORACLE_PASSWORD},  \
+                                                  validate-on-match=false,  \
+                                                  background-validation=true,  \
+                                                  background-validation-millis=60000,  \
+                                                  idle-timeout-minutes=5,  \
+                                                  valid-connection-checker-class-name=org.jboss.jca.adapters.jdbc.extensions.oracle.OracleValidConnectionChecker,  \
+                                                  exception-sorter-class-name=org.jboss.jca.adapters.jdbc.extensions.oracle.OracleExceptionSorter,  \
+                                                  stale-connection-checker-class-name=org.jboss.jca.adapters.jdbc.extensions.oracle.OracleStaleConnectionChecker  \
+                                                  )
 
 
-/subsystem=datasources/data-source=KeycloakDS:remove()
-/subsystem=datasources/data-source=KeycloakDS:add(min-pool-size=2,max-pool-size=20,jndi-name=java:jboss/datasources/KeycloakDS,enabled=true,use-java-context=true,connection-url="jdbc\:oracle\:thin\:@(DESCRIPTION\=(LOAD_BALANCE\=on)(ADDRESS\=(PROTOCOL\=TCP)(HOST\=${env.ORACLE_SERVICE_HOST})(PORT\=${env.ORACLE_SERVICE_PORT}))(ADDRESS\=(PROTOCOL\=TCP)(HOST\=${env.ORACLE_SERVICE_HOST_2})(PORT\=${env.ORACLE_SERVICE_PORT_2}))(CONNECT_DATA\=(SERVICE_NAME\=${env.ORACLE_SERVICE_NAME})))",driver-name=oracle,user-name=${env.ORACLE_USERNAME},password=${env.ORACLE_PASSWORD},validate-on-match=false,background-validation=true,background-validation-millis=60000,idle-timeout-minutes=5,valid-connection-checker-class-name=org.jboss.jca.adapters.jdbc.extensions.oracle.OracleValidConnectionChecker,exception-sorter-class-name=org.jboss.jca.adapters.jdbc.extensions.oracle.OracleExceptionSorter,stale-connection-checker-class-name=org.jboss.jca.adapters.jdbc.extensions.oracle.OracleStaleConnectionChecker)
-
-
-## Add Oracle driver
-## module add --name=com.oracle --resources=/extensions/ojdbc7.jar --dependencies=javax.api,javax.resource.api
-##/subsystem=datasources/jdbc-driver=oracle:add(driver-name=oracle,driver-module-name=com.oracle,driver-xa-datasource-class-name=oracle.jdbc.xa.client.OracleXADataSource)
-##/subsystem=datasources/data-source=KeycloakDS:remove()
-##/subsystem=datasources/data-source=KeycloakDS:add(jndi-name=java:jboss/datasources/KeycloakDS,enabled=true,use-java-context=true,connection-url="jdbc\:oracle\:thin\:@(DESCRIPTION\=(LOAD_BALANCE\=on)(ADDRESS\=(PROTOCOL\=TCP)(HOST\=${env.ORACLE_SERVICE_HOST})(PORT\=${env.ORACLE_SERVICE_PORT}))(ADDRESS\=(PROTOCOL\=TCP)(HOST\=${env.ORACLE_SERVICE_HOST_2})(PORT\=${env.ORACLE_SERVICE_PORT_2}))(CONNECT_DATA\=(SERVICE_NAME\=${env.ORACLE_SERVICE_NAME})))",driver-name=oracle,user-name=${env.ORACLE_USERNAME},password=${env.ORACLE_PASSWORD})
 ## Add truststore
 ##/subsystem=keycloak-server/spi=truststore:remove()
 ##/subsystem=keycloak-server/spi=truststore:add()
@@ -46,5 +53,5 @@ echo "/subsystem=datasources/:read-resource"
 ##/subsystem=keycloak-server/spi=truststore/provider=file/:map-put(name=properties,key=password, value="${env.SSO_TRUSTSTORE_PASSWORD}")
 ##/subsystem=keycloak-server/spi=truststore/provider=file/:map-put(name=properties,key=hostname-verification-policy, value="WILDCARD")
 ##/subsystem=keycloak-server/spi=truststore/provider=file/:map-put(name=properties,key=disabled, value="false")
-run-batch
+##run-batch
 quit
