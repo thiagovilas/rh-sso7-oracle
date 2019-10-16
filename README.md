@@ -82,10 +82,3 @@ rh-sso7-oracle:latest
 ```
 
 
-
-# References
-https://access.redhat.com/solutions/3402171
-
-https://github.com/jboss-container-images/redhat-sso-7-openshift-image/tree/sso72-dev/templates
-
-https://access.redhat.com/documentation/en-us/red_hat_jboss_enterprise_application_platform/7.1/html-single/red_hat_jboss_enterprise_application_platform_for_openshift_online/#reference_clustering
