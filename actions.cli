@@ -2,24 +2,29 @@
 
 ## admin cli commands to edit the configuration
 embed-server --std-out=echo  --server-config=standalone-openshift.xml
-##batch
+
+## Check already created components
 
 ## Add Oracle driver
-echo "Checking Diver"
 
 if (outcome != success) of /subsystem=datasources/jdbc-driver=oracle:read-resource
     echo "installing com.oracle ..."
     module add --name=com.oracle --resources=/extensions/ojdbc7.jar --dependencies=javax.api,javax.resource.api
     /subsystem=datasources/jdbc-driver=oracle:add(driver-name=oracle,driver-module-name=com.oracle,driver-xa-datasource-class-name=oracle.jdbc.xa.client.OracleXADataSource)
-    echo "installed com.oracle ..."
-else
-    echo "module com.oracle already installed"
 end-if
 
 if (outcome == success) of /subsystem=datasources/data-source=KeycloakDS:read-resource
-    echo "Removing KeycloakDS if exists"
+    echo "Removing KeycloakDS"
     /subsystem=datasources/data-source=KeycloakDS:remove()
 end-if
+
+if (outcome == success) of /subsystem=keycloak-server/spi=truststore:read-resource
+    echo "Removing truststore if exists"
+    /subsystem=keycloak-server/spi=truststore:remove()
+end-if
+
+## Start batch mode
+batch
 
 ## Replace this connection-url Line if you have an oracle cluster
 ## connection-url="jdbc\:oracle\:thin\:@(DESCRIPTION\=(LOAD_BALANCE\=on)(ADDRESS\=(PROTOCOL\=TCP)(HOST\=${env.ORACLE_SERVICE_HOST})(PORT\=${env.ORACLE_SERVICE_PORT}))(ADDRESS\=(PROTOCOL\=TCP)(HOST\=${env.ORACLE_SERVICE_HOST_2})(PORT\=${env.ORACLE_SERVICE_PORT_2}))(CONNECT_DATA\=(SERVICE_NAME\=${env.ORACLE_SERVICE_NAME})))"
@@ -46,12 +51,13 @@ end-if
 
 
 ## Add truststore
-##/subsystem=keycloak-server/spi=truststore:remove()
-##/subsystem=keycloak-server/spi=truststore:add()
-##/subsystem=keycloak-server/spi=truststore/provider=file:add(enabled=true)
-##/subsystem=keycloak-server/spi=truststore/provider=file/:map-put(name=properties,key=file, value="${env.SSO_TRUSTSTORE_DIR}/${env.SSO_TRUSTSTORE}")
-##/subsystem=keycloak-server/spi=truststore/provider=file/:map-put(name=properties,key=password, value="${env.SSO_TRUSTSTORE_PASSWORD}")
-##/subsystem=keycloak-server/spi=truststore/provider=file/:map-put(name=properties,key=hostname-verification-policy, value="WILDCARD")
-##/subsystem=keycloak-server/spi=truststore/provider=file/:map-put(name=properties,key=disabled, value="false")
-##run-batch
+
+/subsystem=keycloak-server/spi=truststore:add()
+/subsystem=keycloak-server/spi=truststore/provider=file:add(enabled=true)
+/subsystem=keycloak-server/spi=truststore/provider=file/:map-put(name=properties,key=file, value="/extensions/truststore.jks")
+/subsystem=keycloak-server/spi=truststore/provider=file/:map-put(name=properties,key=password, value="trust123")
+/subsystem=keycloak-server/spi=truststore/provider=file/:map-put(name=properties,key=hostname-verification-policy, value="WILDCARD")
+/subsystem=keycloak-server/spi=truststore/provider=file/:map-put(name=properties,key=disabled, value="false")
+
+run-batch
 quit

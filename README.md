@@ -15,6 +15,7 @@ Download Oracle JDBC driver adding it to the /extensions folder.
 https://www.oracle.com/database/technologies/jdbc-drivers-12c-downloads.html
 
 Overwrite /extension/truststore.jks if you need use any specific certificate
+keytool -genkey -alias localhost -keyalg RSA -keystore ./extensions/truststore.jks -validity 10950
 
 # Description
 This repository contains a container to deploy RH SSO  accessing external Oracle database. To do so, it calls a script which is mounted under /extensions/scripts. This script will configure properly the standalone.xml file contained in the image to add the datasource. It also adds your own truststore.
@@ -70,11 +71,7 @@ $ docker run -d --name rh-sso7-oracle -p 8080:8080  --network=rh-sso-net \
 -e ORACLE_USERNAME=RHSSO \
 -e ORACLE_PASSWORD=RHSSO \
 -e ORACLE_SERVICE_HOST=oracle-db-rh-sso \
--e ORACLE_SERVICE_HOST_2=oracle-db-rh-sso \
 -e ORACLE_SERVICE_PORT=1521 \
--e ORACLE_SERVICE_PORT_2=1521 \
--e SSO_TRUSTSTORE=truststore.jks \
--e SSO_TRUSTSTORE_PASSWORD=trust123 \
 -e SSO_ADMIN_PASSWORD=sso123 \
 -e SSO_ADMIN_USERNAME=ssouser \
 -e JGROUPS_CLUSTER_PASSWORD=cluster123 \
